@@ -10,7 +10,9 @@ namespace pyro {
                                                                                jawsTrigger(jawsTrigger),
                                                                                state(UNKNOWN),
                                                                                triggered(false){
-        
+        jawsMotor.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+        jawsMotor.setGearing(okapi::AbstractMotor::gearset::red);
+        jawsMotor.setEncoderUnits(okapi::AbstractMotor::encoderUnits::degrees);
     }
 
     bool jaws::calibrate() {
@@ -19,11 +21,12 @@ namespace pyro {
         while(jawsMotor.getCurrentDraw() > 100){
             pros::delay(10);
         }
-        jawsMotor.moveVoltage(750);
+        jawsMotor.moveVoltage(500);
         pros::delay(50);
         while(jawsMotor.getActualVelocity() > 2){
             pros::delay(10);
         }
+        jawsMotor.moveVoltage(0);
         jawsMotor.tarePosition();
         state = CALIBRATED;
         return true;
@@ -31,7 +34,13 @@ namespace pyro {
 
     bool jaws::open() {
         if(state == CALIBRATED || state == CLOSED){
-            jawsMotor.moveAbsolute(235 * ((int) jawsMotor.getPosition() % 360), 100);
+            printf("number:%d\n", 235 - ((int) jawsMotor.getPosition() % 360));
+            jawsMotor.moveRelative(235 - ((int) jawsMotor.getPosition() % 360), 100);
+            pros::delay(40);
+            while(abs(jawsMotor.getActualVelocity()) > 0){
+                pros::delay(10);
+            }
+            state = OPEN;
             return true;
         }
         else{
@@ -58,6 +67,8 @@ namespace pyro {
     }
 
     bool jaws::getNewTrigger() {
+        //printf("button: %d, triggered: %d\n", jawsTrigger.get_value(), triggered);
+        return jawsTrigger.get_new_press();
         if(!triggered && isTriggered()){
             return true;
         }
@@ -65,6 +76,7 @@ namespace pyro {
             return false;
         }
     }
+
 
 
 }

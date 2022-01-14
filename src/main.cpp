@@ -1,6 +1,6 @@
 #include "main.h"
-#include "pyrolib/pyrolib.h"
 
+using namespace okapi;
 /**
  * A callback function for LLEMU's center button.
  *
@@ -74,21 +74,65 @@ void autonomous() {}
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-void opcontrol() {
-	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::Motor left_mtr(1);
-	pros::Motor right_mtr(2);
+[[noreturn]] void opcontrol() {
+	okapi::Controller master(okapi::ControllerId::master);
+    pros::Controller prosMaster(pros::E_CONTROLLER_MASTER);
+	okapi::Motor rightLift(-5);
+    rightLift.setBrakeMode(AbstractMotor::brakeMode::hold);
+    okapi::Motor leftLift(15);
+    leftLift.setBrakeMode(AbstractMotor::brakeMode::hold);
+    okapi::Motor arm(6);
+    arm.setEncoderUnits(AbstractMotor::encoderUnits::degrees);
+
+    std::shared_ptr<okapi::ChassisController> chassis = okapi::ChassisControllerBuilder()
+            .withMotors(
+
+                    {-11, 12, -13},    // Left motors are 3 & 4
+                    {1, -2, 3}     // Right motors are 1 & 2 (reversed)
+            )
+            .withDimensions(okapi::AbstractMotor::gearset::green, {{4_in, 11.5_in}, okapi::imev5GreenTPR})
+            .build();
+
+    pros::ADIDigitalIn jawsTrigger('B');
+    pyro::jaws jaws1(18, jawsTrigger);
 
 
+    bool armOut = false;
 	while (true) {
-		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
-		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
-		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
-		int left = master.get_analog(ANALOG_LEFT_Y);
-		int right = master.get_analog(ANALOG_RIGHT_Y);
+        chassis->getModel()->tank(master.getAnalog(ControllerAnalog::leftY), master.getAnalog(ControllerAnalog::rightY), 0.05);
 
-		left_mtr = left;
-		right_mtr = right;
-		pros::delay(20);
+        if(master.getDigital(ControllerDigital::L1)){
+            leftLift.moveVelocity(200);
+            rightLift.moveVelocity(200);
+        }
+        else if(master.getDigital(ControllerDigital::L2)){
+            leftLift.moveVelocity(-200);
+            rightLift.moveVelocity(-200);
+        }
+        else{
+            leftLift.moveVelocity(0);
+            rightLift.moveVelocity(0);
+        }
+
+        if(master.getDigital(okapi::ControllerDigital::Y)){
+            jaws1.calibrate();
+        }
+        if(prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1)){
+            jaws1.open();
+        }
+        if(jaws1.getNewTrigger() || master.getDigital(okapi::ControllerDigital::R2)){
+            jaws1.close();
+        }
+
+        if(prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)){
+            if(armOut){
+                arm.moveRelative(-180,100);
+            }
+            else{
+                arm.moveRelative(180, 100);
+            }
+            armOut = !armOut;
+        }
+		pros::delay(10);
 	}
 }
