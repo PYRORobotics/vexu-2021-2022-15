@@ -28,6 +28,11 @@ void initialize() {
 	pros::lcd::set_text(1, "Hello PROS User!");
 
 	pros::lcd::register_btn1_cb(on_center_button);
+
+    pros::delay(50);
+    while(imu.is_calibrating()){
+        pros::delay(20);
+    }
 }
 
 /**
@@ -59,7 +64,9 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -75,43 +82,146 @@ void autonomous() {}
  * task, not resume it from where it left off.
  */
 [[noreturn]] void opcontrol() {
-	okapi::Controller master(okapi::ControllerId::master);
+    okapi::Controller master(okapi::ControllerId::master);
     pros::Controller prosMaster(pros::E_CONTROLLER_MASTER);
-	okapi::Motor rightLift(-5);
-    rightLift.setBrakeMode(AbstractMotor::brakeMode::hold);
-    okapi::Motor leftLift(15);
+
+    pyro::controllerLCD masterLCD(prosMaster);
+
+	okapi::Motor leftLift(-1);
     leftLift.setBrakeMode(AbstractMotor::brakeMode::hold);
+    okapi::Motor rightLift(10);
+    rightLift.setBrakeMode(AbstractMotor::brakeMode::hold);
     okapi::Motor arm(6);
     arm.setEncoderUnits(AbstractMotor::encoderUnits::degrees);
 
-    std::shared_ptr<okapi::ChassisController> chassis = okapi::ChassisControllerBuilder()
-            .withMotors(
+    pyro::chassis chassis(
+                    {-3, 4, -5},    // Left motors are 3 & 4
+                    {7, -8, 9}     // Right motors are 1 & 2 (reversed)
+    );
+    chassis.chassisController->getModel()->setBrakeMode(AbstractMotor::brakeMode::hold);
 
-                    {-11, 12, -13},    // Left motors are 3 & 4
-                    {1, -2, 3}     // Right motors are 1 & 2 (reversed)
-            )
-            .withDimensions(okapi::AbstractMotor::gearset::green, {{4_in, 11.5_in}, okapi::imev5GreenTPR})
-            .build();
 
-    pros::ADIDigitalIn jawsTrigger('B');
-    pyro::jaws jaws1(18, jawsTrigger);
+    pros::ADIDigitalIn jaws1Trigger('H');
+    pyro::jaws jaws1(11, jaws1Trigger);
 
+    pros::ADIDigitalIn jaws2Trigger('A');
+    pyro::jaws jaws2(6, jaws2Trigger);
+
+
+    imu.tare();
 
     bool armOut = false;
+    bool frontLiftUp = true;
+    bool backLiftUp = true;
 	while (true) {
-        chassis->getModel()->tank(master.getAnalog(ControllerAnalog::leftY), master.getAnalog(ControllerAnalog::rightY), 0.05);
 
+        //masterLCD.setControllerLCD(0, "ctemp: " + std::to_string(jaws1.getTemperature()));
+
+        masterLCD.setControllerLCD(0, "degR: " + std::to_string(imu.get_roll()));
+        masterLCD.setControllerLCD(1, "degY: " + std::to_string(imu.get_yaw()));
+        masterLCD.setControllerLCD(2, "pos: " + std::to_string(leftLift.getPosition()));
+
+        if(fabs(imu.get_roll()) > 33){
+        //if(false){
+            chassis.arcade((imu.get_roll() > 0) ? 1 : -1, 0, 0);
+        }
+        else {
+            if (fabs(master.getAnalog(ControllerAnalog::leftY)) > 0.05 ||
+                fabs(master.getAnalog(ControllerAnalog::rightY)) > 0.05) {
+                //printf("got here\n");
+                chassis.setCurrentLimit(2500);
+                chassis.tank(master.getAnalog(ControllerAnalog::leftY),
+                             master.getAnalog(ControllerAnalog::rightY), 0.05);
+            } else {
+                //chassis.tank(0, 0, 0.05);
+                //chassis.setCurrentLimit(0);
+                chassis.chassisController->getModel()->stop();
+            }
+
+        }
+
+        /*
         if(master.getDigital(ControllerDigital::L1)){
-            leftLift.moveVelocity(200);
-            rightLift.moveVelocity(200);
+            backLift.setCurrentLimit(2500);
+            frontLift.setCurrentLimit(2500);
+            backLift.moveVelocity(200);
+            frontLift.moveVelocity(200);
         }
         else if(master.getDigital(ControllerDigital::L2)){
-            leftLift.moveVelocity(-200);
-            rightLift.moveVelocity(-200);
+            backLift.setCurrentLimit(2500);
+            frontLift.setCurrentLimit(2500);
+            backLift.moveVelocity(-200);
+            frontLift.moveVelocity(-200);
         }
         else{
-            leftLift.moveVelocity(0);
+            backLift.setCurrentLimit(0);
+            frontLift.setCurrentLimit(0);
+            backLift.moveVelocity(0);
+            frontLift.moveVelocity(0);
+        }*/
+
+        /*
+        if(prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
+            frontLiftUp = !frontLiftUp;
+            if(frontLiftUp){
+                frontLift.moveAbsolute(-50, 200);
+            }
+            else{
+                frontLift.moveAbsolute(-4600, 200);
+            }
+        }
+        if(prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2)){
+            backLiftUp = !backLiftUp;
+            if(backLiftUp){
+                backLift.moveAbsolute(-50, 200);
+            }
+            else{
+                backLift.moveAbsolute(-4600, 200);
+            }
+        }*/
+
+
+        if(master.getDigital(ControllerDigital::L1)){
+            if(leftLift.getPosition() < 3100){
+                leftLift.setCurrentLimit(2500);
+                leftLift.moveVelocity(200);
+            }
+            else{
+                leftLift.moveVelocity(0);
+            }
+
+            if(rightLift.getPosition() < 3100){
+                rightLift.setCurrentLimit(2500);
+                rightLift.moveVelocity(200);
+            }
+            else{
+                rightLift.moveVelocity(0);
+            }
+        }
+        else if(master.getDigital(ControllerDigital::L2)){
+            if(leftLift.getPosition() > 0){
+                leftLift.setCurrentLimit(2500);
+                leftLift.moveVelocity(-200);
+            }
+            else{
+                leftLift.setCurrentLimit(0);
+                leftLift.moveVelocity(0);
+            }
+
+            if(rightLift.getPosition() > 0){
+                rightLift.setCurrentLimit(2500);
+                rightLift.moveVelocity(-200);
+            }
+            else{
+                rightLift.setCurrentLimit(0);
+                rightLift.moveVelocity(0);
+            }
+        }
+        else{
+            //rightLift.setCurrentLimit(0);
+            //leftLift.setCurrentLimit(0);
             rightLift.moveVelocity(0);
+            leftLift.moveVelocity(0);
         }
 
         if(master.getDigital(okapi::ControllerDigital::Y)){
@@ -132,6 +242,10 @@ void autonomous() {}
                 arm.moveRelative(180, 100);
             }
             armOut = !armOut;
+        }
+
+        if(prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)){
+            printf("arm_pos: %d\n", (int)rightLift.getPosition());
         }
 		pros::delay(10);
 	}

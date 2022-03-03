@@ -16,17 +16,20 @@ namespace pyro {
     }
 
     bool jaws::calibrate() {
-        jawsMotor.moveVelocity(10);
+        jawsMotor.moveVelocity(30);
         pros::delay(50);
         while(jawsMotor.getCurrentDraw() > 100){
             pros::delay(10);
         }
-        jawsMotor.moveVoltage(500);
+        jawsMotor.moveVoltage(-2000);
         pros::delay(50);
-        while(jawsMotor.getActualVelocity() > 2){
+        while(abs(jawsMotor.getActualVelocity()) > 2){
             pros::delay(10);
         }
         jawsMotor.moveVoltage(0);
+        int absolute_pos = jawsMotor.getPosition();
+        int relative_pos = (int) absolute_pos % 360;
+        printf("old_rel_pos: %d\n", relative_pos);
         jawsMotor.tarePosition();
         state = CALIBRATED;
         return true;
@@ -34,8 +37,18 @@ namespace pyro {
 
     bool jaws::open() {
         if(state == CALIBRATED || state == CLOSED){
-            printf("number:%d\n", 235 - ((int) jawsMotor.getPosition() % 360));
-            jawsMotor.moveRelative(235 - ((int) jawsMotor.getPosition() % 360), 100);
+            int absolute_pos = jawsMotor.getPosition();
+            int revs = (int) absolute_pos / 360;
+            int relative_pos = (int) absolute_pos % 360;
+            if(relative_pos > 50){
+                revs++;
+            }
+            int target_pos = 380 + (revs * 360);
+            printf("abs_pos: %d\n", absolute_pos);
+            printf("revs: %d\n", revs);
+            printf("relative_pos: %d\n", relative_pos);
+            printf("target_pos: %d\n", target_pos);
+            jawsMotor.moveAbsolute(target_pos, 100);
             pros::delay(40);
             while(abs(jawsMotor.getActualVelocity()) > 0){
                 pros::delay(10);
@@ -77,6 +90,9 @@ namespace pyro {
         }
     }
 
+    double jaws::getTemperature() {
+        return jawsMotor.getTemperature();
+    }
 
 
 }

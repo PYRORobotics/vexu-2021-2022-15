@@ -15,6 +15,7 @@ namespace pyro {
         bool open();
         bool isTriggered();
         bool getNewTrigger();
+        double getTemperature();
 
     private:
         okapi::Motor jawsMotor;

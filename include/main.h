@@ -15,6 +15,8 @@
 #ifndef _PROS_MAIN_H_
 #define _PROS_MAIN_H_
 
+
+
 /**
  * If defined, some commonly used enums will have preprocessor macros which give
  * a shorter, more convenient naming pattern. If this isn't desired, simply
@@ -54,6 +56,9 @@
 // using namespace pros;
 // using namespace pros::literals;
 // using namespace okapi;
+
+inline pros::Imu imu(14);
+
 
 /**
  * Prototypes for the competition control tasks are redefined here to ensure
