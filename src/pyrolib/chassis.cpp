@@ -63,7 +63,7 @@ namespace pyro {
                         .withLimits({
                                             3.0,
                                             //0.5, // Maximum linear velocity of the Chassis in m/s
-                                            6.6, // Maximum linear acceleration of the Chassis in m/s/s
+                                            2.3, // Maximum linear acceleration of the Chassis in m/s/s
                                             100.0 // Maximum linear jerk of the Chassis in m/s/s/s
                                     })
                         .withOutput(chassisController)

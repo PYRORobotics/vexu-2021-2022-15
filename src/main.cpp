@@ -53,7 +53,7 @@ void initialize() {
 
     chassis.profileController->generatePath({
                                                     {0_ft, 0_ft, 0_deg},  // Profile starting position, this will normally be (0, 0, 0)
-                                                    {38_in, 0_ft, 0_deg}}, // The next point in the profile, 3 feet forward
+                                                    {41_in, 0_ft, 0_deg}}, // The next point in the profile, 3 feet forward
                                             "forwardGoal" // Profile name
     );
 
@@ -90,7 +90,7 @@ void startLift(){
     rightLift.moveVoltage(-4000);
 };
 
-int autonomousMode = 1;
+int autonomousMode = 0;
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -118,6 +118,9 @@ void autonomous() {
         while (!jaws1.getNewTrigger() && runTime < 2000) {
             pros::delay(10);
             runTime += 10;
+        }
+        if(runTime >= 2000){
+            masterLCD.setControllerLCD(0, "Auton Timeout");
         }
 
         jaws1.close();
