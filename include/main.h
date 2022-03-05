@@ -57,7 +57,7 @@
 // using namespace pros::literals;
 // using namespace okapi;
 
-inline pros::Imu imu(14);
+
 
 
 /**

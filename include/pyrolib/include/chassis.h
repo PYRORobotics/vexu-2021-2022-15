@@ -26,6 +26,8 @@ namespace pyro {
         void setCurrentLimit(int milliamps);
 
         std::shared_ptr<okapi::ChassisController> chassisController;
+        std::shared_ptr<okapi::ChassisController> getChassisController();
+        std::shared_ptr<okapi::AsyncMotionProfileController> profileController;
 
     private:
         std::vector<okapi::Motor> leftMotorsVector;

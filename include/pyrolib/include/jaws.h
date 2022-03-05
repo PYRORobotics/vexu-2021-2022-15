@@ -9,13 +9,16 @@
 namespace pyro {
     class jaws {
     public:
-        jaws(okapi::Motor jawsMotor, pros::ADIDigitalIn jawsTrigger);
+        jaws(okapi::Motor jawsMotor, pros::ADIDigitalIn jawsTrigger, double target_pos = 380);
+
         bool calibrate();
         bool close();
         bool open();
         bool isTriggered();
         bool getNewTrigger();
         double getTemperature();
+        double getPosition();
+
 
     private:
         okapi::Motor jawsMotor;
@@ -28,6 +31,15 @@ namespace pyro {
         } typedef jawsState;
         jawsState state;
         bool triggered;
+
+        bool calibrate_task();
+
+        bool open_task();
+
+        bool close_task();
+
+        double open_pos;
+
     };
 }
 

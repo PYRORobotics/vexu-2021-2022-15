@@ -1,4 +1,6 @@
 #include "main.h"
+#include "devices.h"
+
 
 using namespace okapi;
 /**
@@ -29,10 +31,37 @@ void initialize() {
 
 	pros::lcd::register_btn1_cb(on_center_button);
 
+
+    leftLift.setBrakeMode(AbstractMotor::brakeMode::hold);
+    rightLift.setBrakeMode(AbstractMotor::brakeMode::hold);
+    back.setEncoderUnits(AbstractMotor::encoderUnits::degrees);
+    back.setGearing(okapi::AbstractMotor::gearset::red);
+
+    chassis.chassisController->getModel()->setBrakeMode(AbstractMotor::brakeMode::hold);
+
     pros::delay(50);
     while(imu.is_calibrating()){
         pros::delay(20);
     }
+
+    /*
+    chassis.profileController->generatePath({
+                                            {0_ft, 0_ft, 0_deg},  // Profile starting position, this will normally be (0, 0, 0)
+                                            {28_in, 0_ft, 0_deg}}, // The next point in the profile, 3 feet forward
+                                    "forwardGoal" // Profile name
+    );*/
+
+    chassis.profileController->generatePath({
+                                                    {0_ft, 0_ft, 0_deg},  // Profile starting position, this will normally be (0, 0, 0)
+                                                    {38_in, 0_ft, 0_deg}}, // The next point in the profile, 3 feet forward
+                                            "forwardGoal" // Profile name
+    );
+
+    chassis.profileController->generatePath({
+                                                    {0_ft, 0_ft, 0_deg},  // Profile starting position, this will normally be (0, 0, 0)
+                                                    {12_in, 0_ft, 0_deg}}, // The next point in the profile, 3 feet forward
+                                            "forwardTest" // Profile name
+    );
 }
 
 /**
@@ -53,6 +82,16 @@ void disabled() {}
  */
 void competition_initialize() {}
 
+void startLift(){
+    leftLift.moveAbsolute(400, 200);
+    rightLift.moveAbsolute(400, 200);
+    pros::delay(400);
+    leftLift.moveVoltage(-4000);
+    rightLift.moveVoltage(-4000);
+};
+
+int autonomousMode = 1;
+
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -66,6 +105,43 @@ void competition_initialize() {}
  */
 void autonomous() {
 
+    if(autonomousMode == 0) {
+        printf("start of auton pos: %f\n", jaws1.getPosition());
+        jaws1.open();
+
+        pros::Task StartLift(startLift);
+
+        printf("end of auton pos: %f\n", jaws1.getPosition());
+        int runTime = 0;
+
+        chassis.profileController->setTarget("forwardGoal");
+        while (!jaws1.getNewTrigger() && runTime < 2000) {
+            pros::delay(10);
+            runTime += 10;
+        }
+
+        jaws1.close();
+
+        pros::delay(100);
+        chassis.profileController->waitUntilSettled();
+
+        chassis.profileController->setTarget("forwardGoal", true);
+        pros::delay(100);
+        chassis.profileController->waitUntilSettled();
+
+        pros::delay(2000);
+    }
+    else if(autonomousMode == 1) {
+        chassis.profileController->setTarget("forwardGoal");
+        chassis.profileController->waitUntilSettled();
+    }
+    else if(autonomousMode == 2){
+        chassis.chassisController->setMaxVelocity(100);
+        printf("turning\n");
+        chassis.chassisController->turnAngle(90_deg/0.37);
+        printf("turning done\n");
+        pros::delay(5000);
+    }
 }
 
 /**
@@ -76,52 +152,30 @@ void autonomous() {
  *
  * If no competition control is connected, this function will run immediately
  * following initialize().
- *
+ *stuff
  * If the robot is disabled or communications is lost, the
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
 [[noreturn]] void opcontrol() {
-    okapi::Controller master(okapi::ControllerId::master);
-    pros::Controller prosMaster(pros::E_CONTROLLER_MASTER);
-
-    pyro::controllerLCD masterLCD(prosMaster);
-
-	okapi::Motor leftLift(-1);
-    leftLift.setBrakeMode(AbstractMotor::brakeMode::hold);
-    okapi::Motor rightLift(10);
-    rightLift.setBrakeMode(AbstractMotor::brakeMode::hold);
-    okapi::Motor arm(6);
-    arm.setEncoderUnits(AbstractMotor::encoderUnits::degrees);
-
-    pyro::chassis chassis(
-                    {-3, 4, -5},    // Left motors are 3 & 4
-                    {7, -8, 9}     // Right motors are 1 & 2 (reversed)
-    );
-    chassis.chassisController->getModel()->setBrakeMode(AbstractMotor::brakeMode::hold);
-
-
-    pros::ADIDigitalIn jaws1Trigger('H');
-    pyro::jaws jaws1(11, jaws1Trigger);
-
-    pros::ADIDigitalIn jaws2Trigger('A');
-    pyro::jaws jaws2(6, jaws2Trigger);
-
-
     imu.tare();
 
     bool armOut = false;
     bool frontLiftUp = true;
     bool backLiftUp = true;
+    double backPos = 0;
 	while (true) {
 
         //masterLCD.setControllerLCD(0, "ctemp: " + std::to_string(jaws1.getTemperature()));
 
-        masterLCD.setControllerLCD(0, "degR: " + std::to_string(imu.get_roll()));
-        masterLCD.setControllerLCD(1, "degY: " + std::to_string(imu.get_yaw()));
-        masterLCD.setControllerLCD(2, "pos: " + std::to_string(leftLift.getPosition()));
+        //masterLCD.setControllerLCD(0, "degR: " + std::to_string(imu.get_roll()));
+        //masterLCD.setControllerLCD(1, "degY: " + std::to_string(imu.get_yaw()));
+        masterLCD.setControllerLCD(0, "left: " + std::to_string((encoderLeft.get()/360.0)*PI*2.75));
+        masterLCD.setControllerLCD(1, "right: " + std::to_string((encoderRight.get()/360.0)*PI*2.75));
+        masterLCD.setControllerLCD(2, "temp: " + std::to_string(jaws1.getTemperature()));
 
-        if(fabs(imu.get_roll()) > 33){
+
+        if(fabs(imu.get_roll()) > 33 && fabs(imu.get_roll()) < 360){
         //if(false){
             chassis.arcade((imu.get_roll() > 0) ? 1 : -1, 0, 0);
         }
@@ -182,7 +236,7 @@ void autonomous() {
 
 
         if(master.getDigital(ControllerDigital::L1)){
-            if(leftLift.getPosition() < 3100){
+            if(leftLift.getPosition() < 2900){
                 leftLift.setCurrentLimit(2500);
                 leftLift.moveVelocity(200);
             }
@@ -190,7 +244,7 @@ void autonomous() {
                 leftLift.moveVelocity(0);
             }
 
-            if(rightLift.getPosition() < 3100){
+            if(rightLift.getPosition() < 2900){
                 rightLift.setCurrentLimit(2500);
                 rightLift.moveVelocity(200);
             }
@@ -205,7 +259,8 @@ void autonomous() {
             }
             else{
                 leftLift.setCurrentLimit(0);
-                leftLift.moveVelocity(0);
+                leftLift.moveVoltage(-2000);
+                leftLift.tarePosition();
             }
 
             if(rightLift.getPosition() > 0){
@@ -214,7 +269,8 @@ void autonomous() {
             }
             else{
                 rightLift.setCurrentLimit(0);
-                rightLift.moveVelocity(0);
+                rightLift.moveVoltage(-2000);
+                rightLift.tarePosition();
             }
         }
         else{
@@ -224,28 +280,44 @@ void autonomous() {
             leftLift.moveVelocity(0);
         }
 
-        if(master.getDigital(okapi::ControllerDigital::Y)){
+        if(prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)){
             jaws1.calibrate();
         }
         if(prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1)){
             jaws1.open();
         }
-        if(jaws1.getNewTrigger() || master.getDigital(okapi::ControllerDigital::R2)){
+        if(jaws1.getNewTrigger() || prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)){
             jaws1.close();
         }
 
-        if(prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)){
-            if(armOut){
-                arm.moveRelative(-180,100);
-            }
-            else{
-                arm.moveRelative(180, 100);
-            }
-            armOut = !armOut;
+        if(prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)){
+            jaws2.calibrate();
+        }
+        if(prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)){
+            jaws2.open();
+        }
+        if(jaws2.getNewTrigger() || prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)){
+            jaws2.close();
         }
 
-        if(prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)){
-            printf("arm_pos: %d\n", (int)rightLift.getPosition());
+        if(master.getDigital(okapi::ControllerDigital::down)){
+            back.moveVelocity(-50);
+            backPos = back.getPosition();
+            if(backPos < -190){
+                backPos = -190;
+            }
+        }
+        else if(master.getDigital(okapi::ControllerDigital::up)){
+            if(back.getPosition() < -5) {
+                back.moveVelocity(50);
+                backPos = back.getPosition();
+            }
+            else{
+                back.moveVoltage(0);
+            }
+        }
+        else{
+            back.moveAbsolute(backPos, 50);
         }
 		pros::delay(10);
 	}
