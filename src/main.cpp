@@ -53,7 +53,7 @@ void initialize() {
 
     chassis.profileController->generatePath({
                                                     {0_ft, 0_ft, 0_deg},  // Profile starting position, this will normally be (0, 0, 0)
-                                                    {41_in, 0_ft, 0_deg}}, // The next point in the profile, 3 feet forward
+                                                    {41.5_in, 0_ft, 0_deg}}, // The next point in the profile, 3 feet forward
                                             "forwardGoal" // Profile name
     );
 
@@ -90,7 +90,7 @@ void startLift(){
     rightLift.moveVoltage(-4000);
 };
 
-int autonomousMode = 0;
+int autonomousMode = 3;
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -141,9 +141,44 @@ void autonomous() {
     else if(autonomousMode == 2){
         chassis.chassisController->setMaxVelocity(100);
         printf("turning\n");
-        chassis.chassisController->turnAngle(90_deg/0.37);
+        chassis.chassisController->turnAngle(140_deg);
         printf("turning done\n");
         pros::delay(5000);
+    }
+    else if(autonomousMode == 3){
+        printf("start of auton pos: %f\n", jaws1.getPosition());
+        jaws1.open();
+
+        pros::Task StartLift(startLift);
+
+        printf("end of auton pos: %f\n", jaws1.getPosition());
+        int runTime = 0;
+
+        chassis.profileController->setTarget("forwardGoal");
+        while (!jaws1.getNewTrigger() && runTime < 2000) {
+            pros::delay(10);
+            runTime += 10;
+        }
+        if(runTime >= 2000){
+            masterLCD.setControllerLCD(0, "Auton Timeout");
+        }
+
+        jaws1.close();
+
+        pros::delay(100);
+        chassis.profileController->waitUntilSettled();
+
+        chassis.profileController->setTarget("forwardGoal", true);
+        pros::delay(100);
+        chassis.profileController->waitUntilSettled();
+
+        chassis.chassisController->setMaxVelocity(50);
+        chassis.chassisController->turnAngle(100_deg);
+
+        pros::delay(2000);
+
+        chassis.chassisController->setMaxVelocity(200);
+        chassis.chassisController->moveDistance(100_ft);
     }
 }
 
