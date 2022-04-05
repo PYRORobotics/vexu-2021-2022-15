@@ -16,7 +16,7 @@ inline okapi::Motor rightLift(10);
 inline okapi::Motor back(-20);
 
 inline pyro::chassis chassis(
-        {-3, 4, -5},    // Left motors are 3 & 4
+        {-3, 4, -5},    // Left motors are 3 & 4 // implicit constructor calls
         {7, -8, 9},     // Right motors are 1 & 2 (reversed)
         0.6666
 );
