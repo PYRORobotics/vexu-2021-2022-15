@@ -90,7 +90,7 @@ void startLift(){
     rightLift.moveVoltage(-4000);
 };
 
-int autonomousMode = 3;
+int autonomousMode = 0;
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
