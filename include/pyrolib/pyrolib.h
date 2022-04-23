@@ -8,5 +8,6 @@
 #include "include/controller_lcd.h"
 #include "include/chassis.h"
 #include "include/jaws.h"
+#include "include/multi_state_lift.h"
 
 #endif //VEXU_2021_2022_TESTBED_PYROLIB_H

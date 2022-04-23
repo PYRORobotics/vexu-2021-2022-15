@@ -4,6 +4,7 @@
 
 #ifndef VEXU_2021_2022_15_DEVICES_H
 #define VEXU_2021_2022_15_DEVICES_H
+
 #include "main.h"
 
 inline okapi::Controller master(okapi::ControllerId::master);
@@ -11,9 +12,26 @@ inline pros::Controller prosMaster(pros::E_CONTROLLER_MASTER);
 
 inline pyro::controllerLCD masterLCD(prosMaster);
 
+inline okapi::ControllerButton main_lift_btn(okapi::ControllerDigital::L2);
+inline okapi::ControllerButton main_jaw_btn(okapi::ControllerDigital::L1);
+
+inline okapi::ControllerButton back_lift_btn(okapi::ControllerDigital::R2);
+inline okapi::ControllerButton back_jaw_btn(okapi::ControllerDigital::R1);
+
+
 inline okapi::Motor leftLift(-1);
 inline okapi::Motor rightLift(10);
 inline okapi::Motor back(-20);
+
+inline pyro::multi_state_lift main_lift(
+        {
+                okapi::Motor(1, true, okapi::AbstractMotor::gearset::red, okapi::AbstractMotor::encoderUnits::degrees),
+                okapi::Motor(10, false, okapi::AbstractMotor::gearset::red, okapi::AbstractMotor::encoderUnits::degrees)
+        },
+        (1.0 / 6.0),
+        {0, 20, 75},
+        pyro::multi_state_lift::CYCLE
+);
 
 inline pyro::chassis chassis(
         {-3, 4, -5},    // Left motors are 3 & 4 // implicit constructor calls
@@ -24,7 +42,7 @@ inline pyro::chassis chassis(
 inline pros::Imu imu(14);
 
 inline pros::ADIDigitalIn jaws1Trigger('H');
-inline pyro::jaws jaws1(11, jaws1Trigger, 360);
+inline pyro::jaws jaws1(12, jaws1Trigger, 360);
 
 
 inline pros::ADIDigitalIn jaws2Trigger('G');
