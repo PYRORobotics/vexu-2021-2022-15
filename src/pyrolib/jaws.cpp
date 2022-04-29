@@ -19,7 +19,7 @@ namespace pyro {
     bool jaws::calibrate_task() {
         jawsMotor.moveVelocity(30);
         pros::delay(50);
-        while(jawsMotor.getCurrentDraw() > 100){
+        while(jawsMotor.getCurrentDraw() > 100) {
             pros::delay(10);
         }
         jawsMotor.moveVoltage(-2000);
@@ -83,6 +83,14 @@ namespace pyro {
         }
         else{
             return false;
+        }
+    }
+
+    void jaws::toggle() {
+        if(state == OPEN) {
+            close();
+        } else if(state == CLOSED || state == CALIBRATED) {
+            open();
         }
     }
 

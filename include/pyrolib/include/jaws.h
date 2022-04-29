@@ -14,6 +14,7 @@ namespace pyro {
         bool calibrate();
         bool close();
         bool open();
+        void toggle();
         bool isTriggered();
         bool getNewTrigger();
         double getTemperature();

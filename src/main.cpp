@@ -200,6 +200,7 @@ void autonomous() {
     bool frontLiftUp = true;
     bool backLiftUp = true;
     double backPos = 0;
+    chassis.getChassisController()->getModel()->setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
     while (true) {
 
         //masterLCD.setControllerLCD(0, "ctemp: " + std::to_string(jaws1.getTemperature()));
@@ -216,58 +217,15 @@ void autonomous() {
             chassis.arcade((imu.get_roll() > 0) ? 1 : -1, 0, 0);
         } else {
             if (fabs(master.getAnalog(ControllerAnalog::leftY)) > 0.05 ||
-                fabs(master.getAnalog(ControllerAnalog::rightY)) > 0.05) {
-                //printf("got here\n");
+                fabs(master.getAnalog(ControllerAnalog::rightX)) > 0.05) {
+
                 chassis.setCurrentLimit(2500);
-                chassis.tank(master.getAnalog(ControllerAnalog::leftY),
-                             master.getAnalog(ControllerAnalog::rightY), 0.05);
+                chassis.arcade(master.getAnalog(ControllerAnalog::leftY),
+                               master.getAnalog(ControllerAnalog::rightX), 0.05);
             } else {
-                //chassis.tank(0, 0, 0.05);
-                //chassis.setCurrentLimit(0);
                 chassis.chassisController->getModel()->stop();
             }
-
         }
-
-        /*
-        if(master.getDigital(ControllerDigital::L1)){
-            backLift.setCurrentLimit(2500);
-            frontLift.setCurrentLimit(2500);
-            backLift.moveVelocity(200);
-            frontLift.moveVelocity(200);
-        }
-        else if(master.getDigital(ControllerDigital::L2)){
-            backLift.setCurrentLimit(2500);
-            frontLift.setCurrentLimit(2500);
-            backLift.moveVelocity(-200);
-            frontLift.moveVelocity(-200);
-        }
-        else{
-            backLift.setCurrentLimit(0);
-            frontLift.setCurrentLimit(0);
-            backLift.moveVelocity(0);
-            frontLift.moveVelocity(0);
-        }*/
-
-        /*
-        if(prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
-            frontLiftUp = !frontLiftUp;
-            if(frontLiftUp){
-                frontLift.moveAbsolute(-50, 200);
-            }
-            else{
-                frontLift.moveAbsolute(-4600, 200);
-            }
-        }
-        if(prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2)){
-            backLiftUp = !backLiftUp;
-            if(backLiftUp){
-                backLift.moveAbsolute(-50, 200);
-            }
-            else{
-                backLift.moveAbsolute(-4600, 200);
-            }
-        }*/
 
 
 //        if(master.getDigital(ControllerDigital::L1)){
@@ -318,14 +276,17 @@ void autonomous() {
             main_lift.step();
         }
 
+        if(back_lift_btn.changedToPressed()) {
+            back_lift.step();
+        }
 
         if (prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)) {
             jaws1.calibrate();
         }
-        if (prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1)) {
+        if (prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)) {
             jaws1.open();
         }
-        if (jaws1.getNewTrigger() || prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
+        if (jaws1.getNewTrigger() || prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
             jaws1.close();
         }
 
@@ -339,22 +300,22 @@ void autonomous() {
             jaws2.close();
         }
 
-        if (master.getDigital(okapi::ControllerDigital::down)) {
-            back.moveVelocity(-50);
-            backPos = back.getPosition();
-            if (backPos < -190) {
-                backPos = -190;
-            }
-        } else if (master.getDigital(okapi::ControllerDigital::up)) {
-            if (back.getPosition() < -5) {
-                back.moveVelocity(50);
-                backPos = back.getPosition();
-            } else {
-                back.moveVoltage(0);
-            }
-        } else {
-            back.moveAbsolute(backPos, 50);
-        }
+//        if (master.getDigital(okapi::ControllerDigital::down)) {
+//            back.moveVelocity(-50);
+//            backPos = back.getPosition();
+//            if (backPos < -190) {
+//                backPos = -190;
+//            }
+//        } else if (master.getDigital(okapi::ControllerDigital::up)) {
+//            if (back.getPosition() < -5) {
+//                back.moveVelocity(50);
+//                backPos = back.getPosition();
+//            } else {
+//                back.moveVoltage(0);
+//            }
+//        } else {
+//            back.moveAbsolute(backPos, 50);
+//        }
         pros::delay(10);
     }
 }

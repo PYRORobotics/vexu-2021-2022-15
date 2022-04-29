@@ -18,9 +18,9 @@ inline okapi::ControllerButton main_jaw_btn(okapi::ControllerDigital::L1);
 inline okapi::ControllerButton back_lift_btn(okapi::ControllerDigital::R2);
 inline okapi::ControllerButton back_jaw_btn(okapi::ControllerDigital::R1);
 
-
 inline okapi::Motor leftLift(-1);
 inline okapi::Motor rightLift(10);
+
 inline okapi::Motor back(-20);
 
 inline pyro::multi_state_lift main_lift(
@@ -30,6 +30,15 @@ inline pyro::multi_state_lift main_lift(
         },
         (1.0 / 6.0),
         {0, 20, 75},
+        pyro::multi_state_lift::CYCLE
+);
+
+inline pyro::multi_state_lift back_lift(
+        {
+                okapi::Motor(20, false, okapi::AbstractMotor::gearset::red, okapi::AbstractMotor::encoderUnits::degrees)
+        },
+        (1.0 / 2.0),
+        {0, 85},
         pyro::multi_state_lift::CYCLE
 );
 
