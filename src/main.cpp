@@ -107,16 +107,16 @@ int autonomousMode = 0;
 void autonomous() {
 
     if (autonomousMode == 0) {
-        printf("start of auton pos: %f\n", jaws1.getPosition());
-        jaws1.open();
+        printf("start of auton pos: %f\n", main_jaw.getPosition());
+        main_jaw.open();
 
         pros::Task StartLift(startLift);
 
-        printf("end of auton pos: %f\n", jaws1.getPosition());
+        printf("end of auton pos: %f\n", main_jaw.getPosition());
         int runTime = 0;
 
         chassis.profileController->setTarget("forwardGoal");
-        while (!jaws1.getNewTrigger() && runTime < 2000) {
+        while (!main_jaw.getNewTrigger() && runTime < 2000) {
             pros::delay(10);
             runTime += 10;
         }
@@ -124,7 +124,7 @@ void autonomous() {
             masterLCD.setControllerLCD(0, "Auton Timeout");
         }
 
-        jaws1.close();
+        main_jaw.close();
 
         pros::delay(100);
         chassis.profileController->waitUntilSettled();
@@ -144,16 +144,16 @@ void autonomous() {
         printf("turning done\n");
         pros::delay(5000);
     } else if (autonomousMode == 3) {
-        printf("start of auton pos: %f\n", jaws1.getPosition());
-        jaws1.open();
+        printf("start of auton pos: %f\n", main_jaw.getPosition());
+        main_jaw.open();
 
         pros::Task StartLift(startLift);
 
-        printf("end of auton pos: %f\n", jaws1.getPosition());
+        printf("end of auton pos: %f\n", main_jaw.getPosition());
         int runTime = 0;
 
         chassis.profileController->setTarget("forwardGoal");
-        while (!jaws1.getNewTrigger() && runTime < 2000) {
+        while (!main_jaw.getNewTrigger() && runTime < 2000) {
             pros::delay(10);
             runTime += 10;
         }
@@ -161,7 +161,7 @@ void autonomous() {
             masterLCD.setControllerLCD(0, "Auton Timeout");
         }
 
-        jaws1.close();
+        main_jaw.close();
 
         pros::delay(100);
         chassis.profileController->waitUntilSettled();
@@ -203,13 +203,13 @@ void autonomous() {
     chassis.getChassisController()->getModel()->setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
     while (true) {
 
-        //masterLCD.setControllerLCD(0, "ctemp: " + std::to_string(jaws1.getTemperature()));
+        //masterLCD.setControllerLCD(0, "ctemp: " + std::to_string(main_jaw.getTemperature()));
 
         //masterLCD.setControllerLCD(0, "degR: " + std::to_string(imu.get_roll()));
         //masterLCD.setControllerLCD(1, "degY: " + std::to_string(imu.get_yaw()));
         masterLCD.setControllerLCD(0, "left: " + std::to_string((encoderLeft.get() / 360.0) * PI * 2.75));
         masterLCD.setControllerLCD(1, "right: " + std::to_string((encoderRight.get() / 360.0) * PI * 2.75));
-        masterLCD.setControllerLCD(2, "temp: " + std::to_string(jaws1.getTemperature()));
+        masterLCD.setControllerLCD(2, "temp: " + std::to_string(main_jaw.getTemperature()));
 
 
         if (fabs(imu.get_roll()) > 33 && fabs(imu.get_roll()) < 360) {
@@ -280,42 +280,26 @@ void autonomous() {
             back_lift.step();
         }
 
-        if (prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)) {
-            jaws1.calibrate();
+        if (main_jaw_calibr_btn.changedToPressed()) {
+            main_jaw.calibrate();
         }
-        if (prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)) {
-            jaws1.open();
+        if (main_jaw_open_btn.changedToPressed()) {
+            main_jaw.open();
         }
-        if (jaws1.getNewTrigger() || prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-            jaws1.close();
-        }
-
-        if (prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)) {
-            jaws2.calibrate();
-        }
-        if (prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) {
-            jaws2.open();
-        }
-        if (jaws2.getNewTrigger() || prosMaster.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
-            jaws2.close();
+        if (main_jaw.getNewTrigger() || main_jaw_close_btn.changedToPressed()) {
+            main_jaw.close();
         }
 
-//        if (master.getDigital(okapi::ControllerDigital::down)) {
-//            back.moveVelocity(-50);
-//            backPos = back.getPosition();
-//            if (backPos < -190) {
-//                backPos = -190;
-//            }
-//        } else if (master.getDigital(okapi::ControllerDigital::up)) {
-//            if (back.getPosition() < -5) {
-//                back.moveVelocity(50);
-//                backPos = back.getPosition();
-//            } else {
-//                back.moveVoltage(0);
-//            }
-//        } else {
-//            back.moveAbsolute(backPos, 50);
-//        }
+        if (back_jaw_calibr_btn.changedToPressed()) {
+            back_jaw.calibrate();
+        }
+        if (back_jaw_open_btn.changedToPressed()) {
+            back_jaw.open();
+        }
+        if (back_jaw.getNewTrigger() || back_jaw_close_btn.changedToPressed()) {
+            back_jaw.close();
+        }
+
         pros::delay(10);
     }
 }
