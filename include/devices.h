@@ -12,14 +12,14 @@ inline pros::Controller prosMaster(pros::E_CONTROLLER_MASTER);
 
 inline pyro::controllerLCD masterLCD(prosMaster);
 
-inline okapi::ControllerButton main_lift_btn(okapi::ControllerDigital::X);
-inline okapi::ControllerButton main_jaw_open_btn(okapi::ControllerDigital::R1);
-inline okapi::ControllerButton main_jaw_close_btn(okapi::ControllerDigital::R2);
+inline okapi::ControllerButton main_lift_btn(okapi::ControllerDigital::R2);
+inline okapi::ControllerButton main_jaw_open_btn(okapi::ControllerDigital::X);
+inline okapi::ControllerButton main_jaw_close_btn(okapi::ControllerDigital::R1);
 inline okapi::ControllerButton main_jaw_calibr_btn(okapi::ControllerDigital::B);
 
-inline okapi::ControllerButton back_lift_btn(okapi::ControllerDigital::up);
-inline okapi::ControllerButton back_jaw_open_btn(okapi::ControllerDigital::L1);
-inline okapi::ControllerButton back_jaw_close_btn(okapi::ControllerDigital::L2);
+inline okapi::ControllerButton back_lift_btn(okapi::ControllerDigital::L2);
+inline okapi::ControllerButton back_jaw_open_btn(okapi::ControllerDigital::up);
+inline okapi::ControllerButton back_jaw_close_btn(okapi::ControllerDigital::L1);
 inline okapi::ControllerButton back_jaw_calibr_btn(okapi::ControllerDigital::down);
 
 inline okapi::Motor leftLift(-1);
