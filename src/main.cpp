@@ -283,20 +283,20 @@ void autonomous() {
         if (main_jaw_calibr_btn.changedToPressed()) {
             main_jaw.calibrate();
         }
-        if (main_jaw_open_btn.changedToPressed()) {
-            main_jaw.open();
+        if (main_jaw_btn.changedToPressed()) {
+            main_jaw.toggle();
         }
-        if (main_jaw.getNewTrigger() || main_jaw_close_btn.changedToPressed()) {
+        if (main_jaw.getNewTrigger()) {
             main_jaw.close();
         }
 
         if (back_jaw_calibr_btn.changedToPressed()) {
             back_jaw.calibrate();
         }
-        if (back_jaw_open_btn.changedToPressed()) {
-            back_jaw.open();
+        if (back_jaw_btn.changedToPressed()) {
+            back_jaw.toggle();
         }
-        if (back_jaw.getNewTrigger() || back_jaw_close_btn.changedToPressed()) {
+        if (back_jaw.getNewTrigger()) {
             back_jaw.close();
         }
 
