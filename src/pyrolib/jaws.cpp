@@ -6,8 +6,9 @@
 
 #include <utility>
 namespace pyro {
-    jaws::jaws(okapi::Motor jawsMotor, pros::ADIDigitalIn jawsTrigger, double target_pos) : jawsMotor(std::move(jawsMotor)),
+    jaws::jaws(okapi::Motor jawsMotor, pros::ADIDigitalIn limit, pros::ADIDigitalIn jawsTrigger, double target_pos) : jawsMotor(std::move(jawsMotor)),
                                                                                                   jawsTrigger(jawsTrigger),
+                                                                                                  limit(limit),
                                                                                                   state(UNKNOWN),
                                                                                                   triggered(false), open_pos(target_pos){
         jawsMotor.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
@@ -29,9 +30,7 @@ namespace pyro {
         }
         pros::delay(500);
         jawsMotor.moveVoltage(0);
-        int absolute_pos = jawsMotor.getPosition();
-        int relative_pos = (int) absolute_pos % 360;
-        printf("old_rel_pos: %d\n", relative_pos);
+
         jawsMotor.tarePosition();
         state = CALIBRATED;
         return true;
@@ -44,22 +43,28 @@ namespace pyro {
 
     bool jaws::open_task() {
         if(state == CALIBRATED || state == CLOSED){
-            int absolute_pos = jawsMotor.getPosition();
-            int revs = (int) absolute_pos / 360;
-            int relative_pos = (int) absolute_pos % 360;
-            if(relative_pos > 50){
-                revs++;
-            }
-            int target_pos = open_pos + (revs * 360);
-            printf("abs_pos: %d\n", absolute_pos);
-            printf("revs: %d\n", revs);
-            printf("relative_pos: %d\n", relative_pos);
-            printf("target_pos: %d\n", target_pos);
-            jawsMotor.moveAbsolute(target_pos, 100);
-            pros::delay(40);
-            while(abs(jawsMotor.getActualVelocity()) > 0){
+//            int absolute_pos = jawsMotor.getPosition();
+//            int revs = (int) absolute_pos / 360;
+//            int relative_pos = (int) absolute_pos % 360;
+//            if(relative_pos > 50){
+//                revs++;
+//            }
+//            int target_pos = open_pos + (revs * 360);
+//            printf("abs_pos: %d\n", absolute_pos);
+//            printf("revs: %d\n", revs);
+//            printf("relative_pos: %d\n", relative_pos);
+//            printf("target_pos: %d\n", target_pos);
+//            jawsMotor.moveAbsolute(target_pos, 100);
+//            pros::delay(40);
+//            while(abs(jawsMotor.getActualVelocity()) > 0){
+//                pros::delay(10);
+//            }
+            while(!limit.get_new_press()) {
+                jawsMotor.moveVelocity(90);
                 pros::delay(10);
             }
+
+            jawsMotor.moveVelocity(0);
             state = OPEN;
             return true;
         }
@@ -74,8 +79,25 @@ namespace pyro {
     }
 
     bool jaws::close_task() {
+//        if(state == OPEN) {
+//            jawsMotor.moveRelative(80, 100);
+//            pros::delay(500);
+//            jawsMotor.moveVoltage(-2000);
+//            state = CLOSED;
+//            return true;
+//        }
+//        else{
+//            return false;
+//        }
         if(state == OPEN) {
-            jawsMotor.moveRelative(40, 100);
+            long opened_draw = jawsMotor.getCurrentDraw();
+
+            while(opened_draw - jawsMotor.getCurrentDraw() < 200) {
+                pros::delay(200);
+                jawsMotor.moveVelocity(100);
+                printf("%ld\n", jawsMotor.getCurrentDraw());
+            }
+            jawsMotor.moveVelocity(0);
             pros::delay(500);
             jawsMotor.moveVoltage(-2000);
             state = CLOSED;

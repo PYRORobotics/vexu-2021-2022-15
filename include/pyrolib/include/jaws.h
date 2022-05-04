@@ -9,7 +9,7 @@
 namespace pyro {
     class jaws {
     public:
-        jaws(okapi::Motor jawsMotor, pros::ADIDigitalIn jawsTrigger, double target_pos = 380);
+        jaws(okapi::Motor jawsMotor, pros::ADIDigitalIn limit, pros::ADIDigitalIn jawsTrigger, double target_pos = 380);
 
         bool calibrate();
         bool close();
@@ -23,6 +23,7 @@ namespace pyro {
 
     private:
         okapi::Motor jawsMotor;
+        pros::ADIDigitalIn limit;
         pros::ADIDigitalIn jawsTrigger;
         enum {
             UNKNOWN,

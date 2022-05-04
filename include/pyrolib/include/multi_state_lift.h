@@ -47,6 +47,8 @@ namespace pyro {
 
         void step();
 
+        unsigned int get_state();
+
     private:
         std::shared_ptr<okapi::MotorGroup> lift_motors;
         double gear_ratio;

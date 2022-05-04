@@ -12,12 +12,12 @@ inline pros::Controller prosMaster(pros::E_CONTROLLER_MASTER);
 
 inline pyro::controllerLCD masterLCD(prosMaster);
 
-inline okapi::ControllerButton main_lift_btn(okapi::ControllerDigital::R2);
-inline okapi::ControllerButton main_jaw_btn(okapi::ControllerDigital::R1);
+inline okapi::ControllerButton main_lift_btn(okapi::ControllerDigital::R1);
+inline okapi::ControllerButton main_jaw_btn(okapi::ControllerDigital::R2);
 inline okapi::ControllerButton main_jaw_calibr_btn(okapi::ControllerDigital::B);
 
-inline okapi::ControllerButton back_lift_btn(okapi::ControllerDigital::L2);
-inline okapi::ControllerButton back_jaw_btn(okapi::ControllerDigital::L1);
+inline okapi::ControllerButton back_lift_btn(okapi::ControllerDigital::L1);
+inline okapi::ControllerButton back_jaw_btn(okapi::ControllerDigital::L2);
 inline okapi::ControllerButton back_jaw_calibr_btn(okapi::ControllerDigital::down);
 
 inline okapi::Motor leftLift(-1);
@@ -40,7 +40,7 @@ inline pyro::multi_state_lift back_lift(
                 okapi::Motor(20, false, okapi::AbstractMotor::gearset::red, okapi::AbstractMotor::encoderUnits::degrees)
         },
         (1.0 / 2.0),
-        {50, 85},
+        {65, 95},
         pyro::multi_state_lift::CYCLE
 );
 
@@ -53,11 +53,25 @@ inline pyro::chassis chassis(
 inline pros::Imu imu(14);
 
 inline pros::ADIDigitalIn main_jaws_trigger('H');
-inline pyro::jaws main_jaw(12, main_jaws_trigger, 400);
 
+inline pros::ADIDigitalIn main_jaws_limit('F');
+
+inline pyro::jaws main_jaw(
+        okapi::Motor(12, false, okapi::AbstractMotor::gearset::red, okapi::AbstractMotor::encoderUnits::degrees),
+        main_jaws_limit,
+        main_jaws_trigger,
+        380
+);
+
+inline okapi::Motor main_mtr(18, false, okapi::AbstractMotor::gearset::red, okapi::AbstractMotor::encoderUnits::degrees);
 
 inline pros::ADIDigitalIn back_jaws_trigger('G');
-inline pyro::jaws back_jaw(18, back_jaws_trigger, 370);
+inline pyro::jaws back_jaw(
+        main_mtr,
+        main_jaws_limit,
+        back_jaws_trigger,
+        380
+);
 
 inline okapi::ADIEncoder encoderLeft{'A', 'B', true};
 inline okapi::ADIEncoder encoderRight{'C', 'D', true};

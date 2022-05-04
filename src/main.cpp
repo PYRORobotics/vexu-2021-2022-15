@@ -35,6 +35,7 @@ void initialize() {
 
     leftLift.setBrakeMode(AbstractMotor::brakeMode::hold);
     rightLift.setBrakeMode(AbstractMotor::brakeMode::hold);
+    main_mtr.setBrakeMode(AbstractMotor::brakeMode::hold);
     back.setEncoderUnits(AbstractMotor::encoderUnits::degrees);
     back.setGearing(okapi::AbstractMotor::gearset::red);
 
@@ -54,7 +55,7 @@ void initialize() {
 
     chassis.profileController->generatePath({
                                                     {0_ft,    0_ft, 0_deg},  // Profile starting position, this will normally be (0, 0, 0)
-                                                    {41.5_in, 0_ft, 0_deg}}, // The next point in the profile, 3 feet forward
+                                                    {42.5_in, 0_ft, 0_deg}}, // The next point in the profile, 3 feet forward
                                             "forwardGoal" // Profile name
     );
 
@@ -87,6 +88,9 @@ void startLift() {
     leftLift.moveAbsolute(400, 200);
     rightLift.moveAbsolute(400, 200);
     pros::delay(400);
+    leftLift.moveVoltage(-12000);
+    rightLift.moveVoltage(-12000);
+    pros::delay(250);
     leftLift.moveVoltage(-4000);
     rightLift.moveVoltage(-4000);
 };
@@ -276,9 +280,17 @@ void autonomous() {
             main_lift.step();
         }
 
-        if(back_lift_btn.changedToPressed()) {
-            back_lift.step();
-        }
+//        if(back_lift_btn.changedToPressed()) {
+//            if(back_lift.get_state() == 0) {
+//                back_lift.transition(1);
+//                pros::delay(200);
+//                back_jaw.open();
+//            } else if(back_lift.get_state() == 1) {
+//                back_jaw.close();
+//                pros::delay(100);
+//                back_lift.transition(0);
+//            }
+//        }
 
         if (main_jaw_calibr_btn.changedToPressed()) {
             main_jaw.calibrate();
@@ -293,12 +305,12 @@ void autonomous() {
         if (back_jaw_calibr_btn.changedToPressed()) {
             back_jaw.calibrate();
         }
-        if (back_jaw_btn.changedToPressed()) {
-            back_jaw.toggle();
-        }
-        if (back_jaw.getNewTrigger()) {
-            back_jaw.close();
-        }
+//        if (back_jaw_btn.changedToPressed()) {
+//            back_jaw.toggle();
+//        }
+//        if (back_jaw.getNewTrigger()) {
+//            back_jaw.close();
+//        }
 
         pros::delay(10);
     }

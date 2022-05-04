@@ -44,10 +44,10 @@ namespace pyro {
                         leftMotorsList, // Left motors are 1 & 2 (reversed)
                         rightMotorsList    // Right motors are 3 & 4
                 )
-                .withSensors(
-                        okapi::ADIEncoder{'A', 'B', true}, // Left encoder in ADI ports A & B
-                        okapi::ADIEncoder{'C', 'D', true}  // Right encoder in ADI ports C & D (reversed)
-                )
+//                .withSensors(
+//                        okapi::ADIEncoder{'A', 'B', true}, // Left encoder in ADI ports A & B
+//                        okapi::ADIEncoder{'C', 'D', true}  // Right encoder in ADI ports C & D (reversed)
+//                )
                 .withGains(
                         {0.001, 0, 0.0001}, // Distance controller gains
                         {0.005, 0, 0.0002}  // Turn controller gains

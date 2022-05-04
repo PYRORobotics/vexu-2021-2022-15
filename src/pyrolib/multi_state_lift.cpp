@@ -68,4 +68,8 @@ namespace pyro {
         }
         next();
     }
+
+    unsigned int multi_state_lift::get_state() {
+        return state_idx;
+    }
 }
